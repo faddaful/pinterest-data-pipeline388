@@ -1,0 +1,5 @@
+name: pint_env
+channels:
+  - defaults
+dependencies:
+  - boto3
