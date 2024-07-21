@@ -7,6 +7,7 @@ import sqlalchemy
 from sqlalchemy.sql import text
 import boto3
 import pymysql
+from datetime import datetime
 
 class AWSDBConnector:
     """
@@ -46,84 +47,130 @@ class AWSDBConnector:
 new_connector = AWSDBConnector("db_creds.yaml")
 print(new_connector)
 
+def fetch_data_from_db(random_row):
+    """
+    Fetches data from pinterest_data, geolocation_data, and user_data tables for a given row.
+    
+    :param random_row: Row number to fetch data from.
+    :return: A tuple containing pinterest_data, geolocation_data, and user_data.
+    """
+    engine = new_connector.create_db_connector()
+    with engine.connect() as connection:
+        pin_result = {}
+        geo_result = {}
+        user_result = {}
+
+        # Fetch pinterest data
+        pin_string = text(f"SELECT * FROM pinterest_data LIMIT {random_row}, 1")
+        pin_selected_row = connection.execute(pin_string)
+        for row in pin_selected_row:
+            pin_result = dict(row._mapping)
+        
+        # Fetch geolocation data
+        geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
+        geo_selected_row = connection.execute(geo_string)
+        for row in geo_selected_row:
+            geo_result = dict(row._mapping)
+        
+        # Fetch user data
+        user_string = text(f"SELECT * FROM user_data LIMIT {random_row}, 1")
+        user_selected_row = connection.execute(user_string)
+        for row in user_selected_row:
+            user_result = dict(row._mapping)
+    
+    return pin_result, geo_result, user_result
+
+def post_data_to_api(pin_result, geo_result, user_result):
+    """
+    Posts data to the corresponding API endpoints.
+    
+    :param pin_result: Data from pinterest_data table.
+    :param geo_result: Data from geolocation_data table.
+    :param user_result: Data from user_data table.
+    """
+    base_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod"
+    invoke_urls = {
+        "pin": f"{base_url}/topics/0affe012670f.pin",
+        "geo": f"{base_url}/topics/0affe012670f.geo",
+        "user": f"{base_url}/topics/0affe012670f.user"
+    }
+    headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
+
+    try:
+        for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
+            payload = {"records": [{"value": result}]}
+            response = requests.post(invoke_urls[topic], headers=headers, json=payload)
+            print(f"Posted to {topic} with response: {response.status_code}")
+            if response.status_code != 200:
+                print(f"Error posting to {topic}: {response.text}")
+    except Exception as e:
+        print(f"Exception occurred: {e}")
+
+def upload_data_to_s3(random_row, pin_result, geo_result, user_result):
+    """
+    Uploads data to AWS S3.
+    
+    :param random_row: Row number to use in the S3 object key.
+    :param pin_result: Data from pinterest_data table.
+    :param geo_result: Data from geolocation_data table.
+    :param user_result: Data from user_data table.
+    """
+    s3_client = boto3.client('s3')
+    bucket_name = 'user-0affe012670f-bucket'
+
+    try:
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=f'pinterest_data/{random_row}.json',
+            Body=json.dumps(pin_result, default=str)
+        )
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=f'geolocation_data/{random_row}.json',
+            Body=json.dumps(geo_result, default=str)
+        )
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=f'user_data/{random_row}.json',
+            Body=json.dumps(user_result, default=str)
+        )
+        print("Data uploaded to S3")
+    except Exception as e:
+        print(f"Exception occurred during S3 upload: {e}")
+
 def run_infinite_post_data_loop():
     """
     Runs an infinite loop that periodically fetches random rows from database tables
     and posts the data to corresponding API endpoints. Also, uploads the data to S3.
     """
-    # Create the invoke URLs per topic
-    invoke_urls = {
-        "pin": "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.pin",
-        "geo": "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.geo",
-        "user": "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.user"
-    }
-
-    headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
-
     while True:
         # Sleep for a random interval between 0 and 2 seconds
         sleep(random.randrange(0, 2))
         random_row = random.randint(0, 11000)
-        engine = new_connector.create_db_connector()
 
-        with engine.connect() as connection:
-            # Fetch pinterest data
-            pin_string = text(f"SELECT * FROM pinterest_data LIMIT {random_row}, 1")
-            pin_selected_row = connection.execute(pin_string)
-            pin_result = {}
-            for row in pin_selected_row:
-                pin_result = dict(row._mapping)
-            
-            # Fetch geolocation data
-            geo_string = text(f"SELECT * FROM geolocation_data LIMIT {random_row}, 1")
-            geo_selected_row = connection.execute(geo_string)
-            geo_result = {}
-            for row in geo_selected_row:
-                geo_result = dict(row._mapping)
-            
-            # Fetch user data
-            user_string = text(f"SELECT * FROM user_data LIMIT {random_row}, 1")
-            user_selected_row = connection.execute(user_string)
-            user_result = {}
-            for row in user_selected_row:
-                user_result = dict(row._mapping)
+        # Fetch data from database
+        pin_result, geo_result, user_result = fetch_data_from_db(random_row)
 
-            # Send data to the corresponding endpoint
-            try:
-                for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
-                    payload = {"records": [{"value": result}]}
-                    response = requests.post(invoke_urls[topic], headers=headers, json=payload)
-                    print(f"Posted to {topic} with response: {response.status_code}")
-                    if response.status_code != 200:
-                        print(f"Error posting to {topic}: {response.text}")
-            except Exception as e:
-                print(f"Exception occurred: {e}")
+        # Post data to API
+        post_data_to_api(pin_result, geo_result, user_result)
 
-            # Optionally, store data to S3
-            try:
-                s3_client = boto3.client('s3')
-                s3_client.put_object(
-                    Bucket='user-0affe012670f-bucket',
-                    Key=f'pinterest_data/{random_row}.json',
-                    Body=str(pin_result)
-                )
-                s3_client.put_object(
-                    Bucket='user-0affe012670f-bucket',
-                    Key=f'geolocation_data/{random_row}.json',
-                    Body=str(geo_result)
-                )
-                s3_client.put_object(
-                    Bucket='user-0affe012670f-bucket',
-                    Key=f'user_data/{random_row}.json',
-                    Body=str(user_result)
-                )
-                print("Data uploaded to S3")
-            except Exception as e:
-                print(f"Exception occurred during S3 upload: {e}")
+        # Upload data to S3
+        upload_data_to_s3(random_row, pin_result, geo_result, user_result)
 
 if __name__ == "__main__":
-    # Run the infinite data posting loop
-    run_infinite_post_data_loop()
+
+    # To debug, you can run each function individually here
+    # For example:
+    random_row = random.randint(0, 11000)
+    pin_result, geo_result, user_result = fetch_data_from_db(random_row)
+    print(pin_result, geo_result, user_result)
+    
+    post_data_to_api(pin_result, geo_result, user_result)
+    
+    upload_data_to_s3(random_row, pin_result, geo_result, user_result)
+
+    # Or run the infinite loop (uncomment to use)
+    # run_infinite_post_data_loop()
     print('Working')
 
 
@@ -139,7 +186,12 @@ if __name__ == "__main__":
 
 
 
-#random.seed(100)
+
+
+
+
+
+# random.seed(100)
 
 # class AWSDBConnector:
 
@@ -193,16 +245,18 @@ if __name__ == "__main__":
 
 
 # if __name__ == "__main__":
-#     # Create the invoke url per topic
+   
+#     run_infinite_post_data_loop()
+#     print('Working')
+    
+
+#      # Create the invoke url per topic
 #     invoke_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.pin"
 #     invoke_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.geo"
 #     invoke_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prod/topics/0affe012670f.user"
 
 #     headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 #     response = requests.request("POST", invoke_url, headers=headers, data=payload)
-#     run_infinite_post_data_loop()
-#     print('Working')
-    
     
 
 
