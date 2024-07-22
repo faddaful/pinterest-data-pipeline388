@@ -25,7 +25,8 @@ Through this project, I have learned how to:
 ### AWS Account
 
 To begin, you will need an AWS account. If you don't have one, you can sign up for free at [AWS Free Tier](https://aws.amazon.com/free/). AWS provides various services that we will use to set up and run our data pipeline.
-
+    - Create a .pem file locally on your machine which will store your key pair. Navigate to your parameter store in aws account to get your key-pair.
+    
 ### Configure EC2 Instance
 
 1. **Launch an EC2 Instance**: 
