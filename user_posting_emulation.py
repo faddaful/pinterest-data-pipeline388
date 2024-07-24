@@ -80,6 +80,15 @@ def fetch_data_from_db(random_row):
     
     return pin_result, geo_result, user_result
 
+class DateTimeEncoder(json.JSONEncoder):
+    """
+    Custom JSON encoder to handle datetime objects.
+    """
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super(DateTimeEncoder, self).default(obj)
+
 def post_data_to_api(pin_result, geo_result, user_result):
     """
     Posts data to the corresponding API endpoints.
@@ -98,13 +107,13 @@ def post_data_to_api(pin_result, geo_result, user_result):
 
     try:
         for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
-            payload = {"records": [{"value": result}]}
-            response = requests.post(invoke_urls[topic], headers=headers, json=payload)
+            payload = {"records": [{"value": json.dumps(result, cls=DateTimeEncoder)}]}
+            response = requests.request("POST", invoke_urls[topic], headers=headers, json=payload)
             print(f"Posted to {topic} with response: {response.status_code}")
             if response.status_code != 200:
                 print(f"Error posting to {topic}: {response.text}")
     except Exception as e:
-        print(f"Exception occurred: {e}")
+        print(f"Exception occurred during posting to API: {e}")
 
 def upload_data_to_s3(random_row, pin_result, geo_result, user_result):
     """
@@ -119,17 +128,17 @@ def upload_data_to_s3(random_row, pin_result, geo_result, user_result):
     bucket_name = 'user-0affe012670f-bucket'
 
     try:
-        s3_client.put_object(
+        s3_client.upload_file(
             Bucket=bucket_name,
             Key=f'pinterest_data/{random_row}.json',
             Body=json.dumps(pin_result, default=str)
         )
-        s3_client.put_object(
+        s3_client.upload_file(
             Bucket=bucket_name,
             Key=f'geolocation_data/{random_row}.json',
             Body=json.dumps(geo_result, default=str)
         )
-        s3_client.put_object(
+        s3_client.upload_file(
             Bucket=bucket_name,
             Key=f'user_data/{random_row}.json',
             Body=json.dumps(user_result, default=str)
