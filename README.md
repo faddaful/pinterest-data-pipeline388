@@ -26,7 +26,7 @@ Through this project, I have learned how to:
 
 To begin, you will need an AWS account. If you don't have one, you can sign up for free at [AWS Free Tier](https://aws.amazon.com/free/). AWS provides various services that we will use to set up and run our data pipeline.
     - Create a .pem file locally on your machine which will store your key pair. Navigate to your parameter store in aws account to get your key-pair.
-    
+
 ### Configure EC2 Instance
 
 1. **Launch an EC2 Instance**: 
@@ -42,10 +42,11 @@ To begin, you will need an AWS account. If you don't have one, you can sign up f
    - Use SSH to connect to your EC2 instance.
    - Ensure you have the necessary permissions set up for your security groups.
     - create a .pem key file locally in your project folder
-    - Connect to your EC2 instance
+    - Connect to your EC2 instance using ssh
 
 ### Setup Kafka on EC2 Instance
-
+In order to setup Kafka on your ec2 client, you will need MSK cluster and Kafka installed.
+Kafka required java to run so you will need to install Java first.
 1. **Install Java**: Kafka requires Java to run.
    ```bash
    sudo apt update
@@ -99,7 +100,7 @@ You will need to use msk connect to connect the msk cluster to a s3 bucket such 
     create directory where we will save our connector 
     <mkdir kafka-connect-s3 && cd kafka-connect-s3>
     # download connector from Confluent
-    <wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/     confluentinc-kafka-connect-s3-10.0.3.zip>
+    <sudo wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/     confluentinc-kafka-connect-s3-10.0.3.zip>
     # copy connector to our S3 bucket
     <aws s3 cp ./confluentinc-kafka-connect-s3-10.0.3.zip s3://<BUCKET_NAME>/kafka-connect-s3/>
         '''
@@ -128,6 +129,9 @@ To replicate the pinterest data pipeline, we need to build our own API. This API
     run the command <./kafka-rest-start /home/ec2-user/confluent-7.2.0/etc/kafka-rest/kafka-rest.properties>
     If everything is setup correctly, you should see a info server running and listening for request.
 3. **Send data to the API**:
+Now, we are ready to send data to the API which will then send the data to the MSK Cluster using the plugin-connector pair previously created.
+- Modify the python script  and add a post_data_to_api function. 
+- Check the data is been consumed in your s3 bucket. You should see a topics folder with your topics name and the corresponding data respectively.
 
 
 

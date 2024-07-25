@@ -115,38 +115,6 @@ def post_data_to_api(pin_result, geo_result, user_result):
     except Exception as e:
         print(f"Exception occurred during posting to API: {e}")
 
-def upload_data_to_s3(random_row, pin_result, geo_result, user_result):
-    """
-    Uploads data to AWS S3.
-    
-    :param random_row: Row number to use in the S3 object key.
-    :param pin_result: Data from pinterest_data table.
-    :param geo_result: Data from geolocation_data table.
-    :param user_result: Data from user_data table.
-    """
-    s3_client = boto3.client('s3')
-    bucket_name = 'user-0affe012670f-bucket'
-
-    try:
-        s3_client.upload_file(
-            Bucket=bucket_name,
-            Key=f'pinterest_data/{random_row}.json',
-            Body=json.dumps(pin_result, default=str)
-        )
-        s3_client.upload_file(
-            Bucket=bucket_name,
-            Key=f'geolocation_data/{random_row}.json',
-            Body=json.dumps(geo_result, default=str)
-        )
-        s3_client.upload_file(
-            Bucket=bucket_name,
-            Key=f'user_data/{random_row}.json',
-            Body=json.dumps(user_result, default=str)
-        )
-        print("Data uploaded to S3")
-    except Exception as e:
-        print(f"Exception occurred during S3 upload: {e}")
-
 def run_infinite_post_data_loop():
     """
     Runs an infinite loop that periodically fetches random rows from database tables
@@ -163,9 +131,6 @@ def run_infinite_post_data_loop():
         # Post data to API
         post_data_to_api(pin_result, geo_result, user_result)
 
-        # Upload data to S3
-        upload_data_to_s3(random_row, pin_result, geo_result, user_result)
-
 if __name__ == "__main__":
 
     # To debug, you can run each function individually here
@@ -175,11 +140,9 @@ if __name__ == "__main__":
     print(pin_result, geo_result, user_result)
     
     post_data_to_api(pin_result, geo_result, user_result)
-    
-    upload_data_to_s3(random_row, pin_result, geo_result, user_result)
 
-    # Or run the infinite loop (uncomment to use)
-    # run_infinite_post_data_loop()
+    # run the infinite loop
+    run_infinite_post_data_loop()
     print('Working')
 
 
