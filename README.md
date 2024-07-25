@@ -96,12 +96,17 @@ You will need to use msk connect to connect the msk cluster to a s3 bucket such 
  - Create a custom plugin with msk connect in the msk connector console. Select the s3 connector zip file as the plugin object.
        '''
     assume admin user privileges
-    <sudo -u ec2-user -i>
+    '''
+    < sudo -u ec2-user -i >
+    '''
     create directory where we will save our connector 
-    <mkdir kafka-connect-s3 && cd kafka-connect-s3>
+    ''' <mkdir kafka-connect-s3 && cd kafka-connect-s3> '''
     # download connector from Confluent
+    '''
     <sudo wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/     confluentinc-kafka-connect-s3-10.0.3.zip>
+    '''
     # copy connector to our S3 bucket
+        '''
     <aws s3 cp ./confluentinc-kafka-connect-s3-10.0.3.zip s3://<BUCKET_NAME>/kafka-connect-s3/>
         '''
  - In your msk console, create a connetor and configure the connector properties as appropriate, select your access role and that's it.
@@ -126,7 +131,7 @@ To replicate the pinterest data pipeline, we need to build our own API. This API
     - Start and deploy the api if you've not done so before.
     - Start the REST PROXY 
     cd to confluent-7.2.0/bin
-    run the command <./kafka-rest-start /home/ec2-user/confluent-7.2.0/etc/kafka-rest/kafka-rest.properties>
+    run the command ''' <./kafka-rest-start /home/ec2-user/confluent-7.2.0/etc/kafka-rest/kafka-rest.properties> '''
     If everything is setup correctly, you should see a info server running and listening for request.
 3. **Send data to the API**:
 Now, we are ready to send data to the API which will then send the data to the MSK Cluster using the plugin-connector pair previously created.
