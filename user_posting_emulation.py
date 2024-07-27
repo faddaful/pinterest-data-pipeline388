@@ -107,13 +107,26 @@ def post_data_to_api(pin_result, geo_result, user_result):
 
     try:
         for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
-            payload = {"records": [{"value": json.dumps(result, cls=DateTimeEncoder)}]}
-            response = requests.request("POST", invoke_urls[topic], headers=headers, json=payload)
+        #for result in [pin_result, geo_result, user_result]:
+            # print("This is pin result before json.dumps is applied:", pin_result)
+            # print("this is geo result before dumping: ", geo_result)
+            # print("This is user reult before dumping: ", user_result)
+
+            payload = {"records": [{"value": result}]}
+            # Serialize the payload with custom DateTimeEncoder
+            json_payload = json.dumps(payload, cls=DateTimeEncoder)
+            print("This is the payload dump: ", json_payload)
+
+            response = requests.request("POST", invoke_urls[topic], headers=headers, data=json_payload)
+
+            print(response)
+
             print(f"Posted to {topic} with response: {response.status_code}")
             if response.status_code != 200:
                 print(f"Error posting to {topic}: {response.text}")
     except Exception as e:
         print(f"Exception occurred during posting to API: {e}")
+
 
 def run_infinite_post_data_loop():
     """
@@ -130,19 +143,19 @@ def run_infinite_post_data_loop():
 
         # Post data to API
         post_data_to_api(pin_result, geo_result, user_result)
-        print
+    
 
 if __name__ == "__main__":
 
-    # To debug, you can run each function individually here
-    # For example:
-    random_row = random.randint(0, 11000)
-    pin_result, geo_result, user_result = fetch_data_from_db(random_row)
-    print(pin_result, geo_result, user_result)
+    # # Running each function individually here
+    # random_row = random.randint(0, 11000)
+    # pin_result, geo_result, user_result = fetch_data_from_db(random_row)
+    # #print(pin_result, geo_result, user_result)
     
-    post_data_to_api(pin_result, geo_result, user_result)
+    # post_data_to_api(pin_result, geo_result, user_result)
 
     # run the infinite loop
-    #run_infinite_post_data_loop()
-    print('Working')
+    run_infinite_post_data_loop()
+    #print("Infinite loop is currently running")
+    #print("This is the pin file :", pin_result)
     
