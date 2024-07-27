@@ -106,15 +106,12 @@ def post_data_to_api(pin_result, geo_result, user_result):
     headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
     try:
-        for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
-        #for result in [pin_result, geo_result, user_result]:
-            # print("This is pin result before json.dumps is applied:", pin_result)
-            # print("this is geo result before dumping: ", geo_result)
-            # print("This is user reult before dumping: ", user_result)
+        for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result])
 
             payload = {"records": [{"value": result}]}
             # Serialize the payload with custom DateTimeEncoder
             json_payload = json.dumps(payload, cls=DateTimeEncoder)
+            #Print the payload for confirmation
             print("This is the payload dump: ", json_payload)
 
             response = requests.request("POST", invoke_urls[topic], headers=headers, data=json_payload)
