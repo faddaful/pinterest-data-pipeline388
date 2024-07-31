@@ -138,6 +138,17 @@ Now, we are ready to send data to the API which will then send the data to the M
 - Modify the python script  and add a post_data_to_api function. 
 - Check the data is been consumed in your s3 bucket. You should see a topics folder with your topics name and the corresponding data respectively.
 
+## Batch Data processing in Databricks
+### Setup Databricks account
+In order for us to clean and query the batch data, we need to read the data from the s3 bucket into databricks.
+- Mout your s3 bucket to the databricks account
+- Read in the data from the Delta table, located at '''< dbfs:/user/hive/warehouse/authentication_credentials >'''
+- Read in the json files from the s3 bucket and convert to dataframe. Create 3 dataframes for the 3 topics in the s3 bucket.
+If all works well. start clening the data.
+All done at this stage.
+
+## Looking Ahead...Orchestrate Databricks Workflow on AWS MWAA (Managed Workflow for Apache Airflow)
+
 
 
 
