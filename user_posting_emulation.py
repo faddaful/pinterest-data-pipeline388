@@ -11,7 +11,7 @@ from datetime import datetime
 
 class AWSDBConnector:
     """
-    A class to handle the connection to an AWS RDS MySQL database using SQLAlchemy.
+    A class to handle the connection to an AWS RDS database using SQLAlchemy.
     """
     def __init__(self, db_creds):
         """

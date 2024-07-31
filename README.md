@@ -130,7 +130,7 @@ To replicate the pinterest data pipeline, we need to build our own API. This API
         Add the aws-msk-iam configuration from this link to the file for authentication https://github.com/aws/aws-msk-iam-auth
     - Start and deploy the api if you've not done so before.
     - Start the REST PROXY 
-    cd to confluent-7.2.0/bin
+    cd to confluent-7.2.0/bin in your ec2 client
     run the command ''' <./kafka-rest-start /home/ec2-user/confluent-7.2.0/etc/kafka-rest/kafka-rest.properties> '''
     If everything is setup correctly, you should see a info server running and listening for request.
 3. **Send data to the API**:
