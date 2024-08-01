@@ -11,3 +11,4 @@ awsli
 kafka_2.12-2.8.1
 confluent-7.2.0 
 kafka-connect-s3
+datetime

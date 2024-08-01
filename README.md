@@ -146,6 +146,7 @@ In order for us to clean and query the batch data, we need to read the data from
 - Read in the json files from the s3 bucket and convert to dataframe. Create 3 dataframes for the 3 topics in the s3 bucket.
 If all works well. start clening the data.
 All done at this stage.
+- Clean the data, perform some computations using pyspark or spark SQL. I prefer pyspark.
 
 ## Looking Ahead...Orchestrate Databricks Workflow on AWS MWAA (Managed Workflow for Apache Airflow)
 

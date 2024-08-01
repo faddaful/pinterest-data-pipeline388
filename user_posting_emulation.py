@@ -144,10 +144,12 @@ def run_infinite_post_data_loop():
 
 if __name__ == "__main__":
 
-    # # Running each function individually here
-    # random_row = random.randint(0, 11000)
-    # pin_result, geo_result, user_result = fetch_data_from_db(random_row)
-    # #print(pin_result, geo_result, user_result)
+    """
+    The ec2 client and kafka connector need to be started first.
+    Run Post_data_to_api function only to post data once
+    or
+    Run the infinite loop to post data continuously.
+    """
     
     # post_data_to_api(pin_result, geo_result, user_result)
 
