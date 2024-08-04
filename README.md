@@ -7,6 +7,11 @@
     2. [Configure EC2 Instance](#configure-ec2-instance)
     3. [Setup Kafka on EC2 Instance](#setup-kafka-on-ec2-instance)
     4. [Create Kafka Topics](#create-kafka-topics)
+
+3. [Connect the MSK cluster to a S3 bucket](#Connect-the-MSK-cluster-to-S3-bucket)
+4. [Build a Rest API ](#Build-rest-API)
+5. [Batch Data processing in Databricks](#batch-data-processing-in-databricks)
+6. [Batch Processing Using AWS MWAA](#batch-processing-using-aws-mwaa)
 3. [Usage Instructions](#usage-instructions)
 4. [File Structure](#file-structure)
 5. [License](#license)
@@ -15,10 +20,12 @@
 
 Welcome to the Pinterest Data Pipeline project! This project is designed to extract, process, and analyze Pinterest data efficiently. The main aim of this project is to build a scalable and reliable data pipeline using modern data engineering tools and techniques.
 
-Through this project, I have learned how to:
+Through this project, you will learned how to:
 - Set up and configure AWS services
 - Deploy and manage Kafka on EC2 instances
 - Create and manage Kafka topics for efficient data streaming
+- Store data in a datalake; we will be using Amazon S3.
+- Transform and query the data using Databricks
 
 ## Setting Up Environment
 
@@ -71,7 +78,7 @@ With Amazon MSK, you don't need to worry about managing your kafka operational o
     '''
 
 
-3. **Start Kafka Server**:
+4. **Start Kafka Server**:
    - Start the ZooKeeper service:
      ```bash
      bin/zookeeper-server-start.sh config/zookeeper.properties
@@ -149,6 +156,32 @@ All done at this stage.
 - Clean the data, perform some computations using pyspark or spark SQL. I prefer pyspark.
 
 ## Looking Ahead...Orchestrate Databricks Workflow on AWS MWAA (Managed Workflow for Apache Airflow)
+## Batch Processing Using AWS MWAA
+To use Job API with aws mwaa to monitor DAG with Databricks based tasks. Create a DAG that connects to a Databricks cluster, then use AWS MWAA to monitor the execution.
+1. **Create an API token in Databricks**:
+- Have access to a Databricks workspoace. 
+- Create a cluster to use in the workspace.
+- Create an access token. You might set the expiry date to lifetime. Note the acess toke.
+2. **Create the MWAA to Databricks connection**:
+- Open the Airflow UI from the MWAA environment. 
+- Navigate to admin and select connections, select databricks_default, paste your access token, fill the host with your databricks account url. Fill extra column with ```{"token": "<token_from_previous_step>", "host": "<url_from_host_column>"}```. Your connecttion type should be databricks.
+- If the connection type is missing, you will need to install some other packages using requirements.txt
+3. **Create & upload requirements.txt file**:
+- Clone the local runner github repo; ```git clone https://github.com/aws/aws-mwaa-local-runner.git```
+- cd to ```cd aws-mwaa-local-runner```
+- Build a docker image with ```./mwaa-local-env build-image```
+- Run the local airflow environment with ```./mwaa-local-env start```
+- Open the Apache Airflow UI at http://localhost:8080/
+- Navigate to ```aws-mwaa-local-runner/requirements/``` locally and create requirements.txt file.
+- Add this line to requirements.txt file ```apache-airflow[databricks]``` to install databricks connection type.
+- Test that everything is running with ```./mwaa-local-env test-requirements```
+- Upload the requirements.txt file to the S3 bucket
+4. **Specify the file path in Requirements file field**:
+- On AWS MWAA console environment, click edit, under the DAG code in Amazon S3, update your Requirements file field by selecting the path corresponding to the requirements.txt file you have just uploaded to the S3 bucket
+- In the Airflow UI, go back to connections and select databricks_default. The connection type should have Databricks option.
+- Create DAG and upload to the DAGS folder. It should appear in the Airflow UI.
+
+## Stream Processing in AWS Kinesis
 
 
 
