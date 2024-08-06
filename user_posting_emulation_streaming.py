@@ -37,23 +37,22 @@ def post_data_to_api(pin_results, geo_results, user_results):
                 # Convert the dictionary to a JSON string
                 records.append({
                     "Data": result,
-                    "PartitionKey": f"partition-1"  # Assuming 'index' is a common key for partitioning
+                    #"PartitionKey": f"partition-1"
                 })
             
             payload = json.dumps({
                 "StreamName": stream_names[topic],
-                "Records": records,
+                "Data": records, "PartitionKey": f"partition-1"
             }, cls=DateTimeEncoder)
             
-            # Replace the placeholder with the actual stream name
+            # Replacing the placeholder with the actual stream name
             invoke_url = base_url.replace("{stream_name}", stream_names[topic])
             
             # Print the payload for confirmation
             print(f"This is the payload dump for {topic}: ", payload)
 
             response = requests.put(invoke_url, headers=headers, data=payload)
-
-            print(response)
+            print(response.json())
 
             print(f"Posted to {topic} with response: {response.status_code}")
             if response.status_code != 200:
@@ -61,7 +60,7 @@ def post_data_to_api(pin_results, geo_results, user_results):
     except Exception as e:
         print(f"Exception occurred during posting to API: {e}")
 
-# Example usage
+# Usage
 if __name__ == "__main__":
     # Sleep for a random interval between 0 and 2 seconds
     sleep(random.randrange(0, 2))

@@ -69,13 +69,13 @@ Kafka required java to run so you will need to install Java first.
    ```
 3. **Install AWS MSK**:
 With Amazon MSK, you don't need to worry about managing your kafka operational overhead. MSK automatically provisions and runs your Apache Kafka clusters, as well as monitors the cluster's health.
-    '''
-    bash
+    
+    ```bash
     wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.5/aws-msk-iam-auth-1.1.5-all.jar
     check that the msk .jar file is in your libs folder
 
     Add the .jar file 
-    '''
+    ```
 
 
 4. **Start Kafka Server**:
@@ -101,17 +101,16 @@ You will need to use msk connect to connect the msk cluster to a s3 bucket such 
 - First download the kafka connector .jar or zip file into your ec2 client from https://www.confluent.io/hub/confluentinc/kafka-connect-s3
 - Upload the connector to your s3 bucket. use the command aws s3 cp kafka-connect-s3 s3://<bucket-name>/kafka-connect-s3/
  - Create a custom plugin with msk connect in the msk connector console. Select the s3 connector zip file as the plugin object.
-       '''
+
     assume admin user privileges
-    '''
+    ```bash
     < sudo -u ec2-user -i >
-    '''
+    ```
     create directory where we will save our connector 
-    ''' <mkdir kafka-connect-s3 && cd kafka-connect-s3> '''
+    
+    ``` <mkdir kafka-connect-s3 && cd kafka-connect-s3> ```
     # download connector from Confluent
-    '''
-    <sudo wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/     confluentinc-kafka-connect-s3-10.0.3.zip>
-    '''
+    ``` <sudo wget https://d1i4a15mxbxib1.cloudfront.net/api/plugins/confluentinc/kafka-connect-s3/versions/10.0.3/     confluentinc-kafka-connect-s3-10.0.3.zip> ```
     # copy connector to our S3 bucket
         '''
     <aws s3 cp ./confluentinc-kafka-connect-s3-10.0.3.zip s3://<BUCKET_NAME>/kafka-connect-s3/>
