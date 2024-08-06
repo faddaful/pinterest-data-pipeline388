@@ -7,14 +7,17 @@
     2. [Configure EC2 Instance](#configure-ec2-instance)
     3. [Setup Kafka on EC2 Instance](#setup-kafka-on-ec2-instance)
     4. [Create Kafka Topics](#create-kafka-topics)
-
-3. [Connect the MSK cluster to a S3 bucket](#Connect-the-MSK-cluster-to-S3-bucket)
-4. [Build a Rest API ](#Build-rest-API)
-5. [Batch Data processing in Databricks](#batch-data-processing-in-databricks)
+3. [Connect the MSK cluster to a S3 bucket](#connect-the-msk-cluster-to-s3-bucket)
+4. [Build a Rest API](#build-rest-api)
+5. [Batch Data Processing in Databricks](#batch-data-processing-in-databricks)
 6. [Batch Processing Using AWS MWAA](#batch-processing-using-aws-mwaa)
-3. [Usage Instructions](#usage-instructions)
-4. [File Structure](#file-structure)
-5. [License](#license)
+7. [Streaming Processing Using AWS Kinesis](#stream-processing-with-aws-kinesis)
+8. [Usage Instructions](#usage-instructions)
+9. [File Structure](#file-structure)
+10. [License](#license)
+
+## Architecture
+![Project_Architecture](CloudPinterestDataPipeline.png)
 
 ## Introduction
 
@@ -180,20 +183,88 @@ To use Job API with aws mwaa to monitor DAG with Databricks based tasks. Create 
 - In the Airflow UI, go back to connections and select databricks_default. The connection type should have Databricks option.
 - Create DAG and upload to the DAGS folder. It should appear in the Airflow UI.
 
-## Stream Processing in AWS Kinesis
-
-
-
-
-
+## Stream Processing with AWS Kinesis
+Now, send streaming data to Kinesis and read this data in Databricks
+- Using Kinesis Data Streams in your AWS console create data streams, one for each data table.
+Navigate to the Kinesis console, and select the Data Streams section. Choose the Create stream button
+- Configure API with Kinesis proxy integration
+Create an IAM role in the IAM console that assumes the AmazonKinesisFullAccessRole policy.
+List stream source, Create, describe and delete streams in Kinesis, Set up the POST, DELETE methods, Add records to streams in Kinesis, Set up the records PUT method, deploy and invoke your API.
+- Send Data to the kinesis Streams
+Create a new script, user_posting_emulation_streaming.py, that builds upon the initial user_posting_emulation.py. Send requests to the API from this script which will add one record at a time to the stream.
+- Read the data from kinesis streams in databricks
+Create a new notebook that read-in the data in databricks. You will need your access key and secret key here.
+- Transform and clean the data as appropriate.
+- Write the streaming data to delta tables.
 
 ## Usage Instructions
 
-(Instructions on how to use the pipeline will be added as the project progresses.)
+1. **Setup AWS Environment**: Follow the steps in the [Setting Up Environment](#setting-up-environment) section to configure your AWS account, EC2 instances, and Kafka setup.
+
+2. **Run the Data Pipeline**:
+    - Ensure that your Kafka broker and ZooKeeper service are running.
+    - Start the REST API to send data to Kafka. Use the provided Python script to post data to the API.
+    - Check your S3 bucket to ensure data is being saved correctly.
+
+3. **Process Data with Databricks**:
+    - Mount your S3 bucket in Databricks.
+    - Load the data from S3 into Databricks Delta tables.
+    - Clean and process the data using PySpark or Spark SQL.
+
+4. **Schedule Batch Processing with MWAA**:
+    - Set up MWAA and create a DAG for Databricks workflows.
+    - Use the MWAA environment to monitor and manage your data pipeline.
+
+5. **Stream Data with Kinesis**:
+    - Set up Kinesis Data Streams and integrate with your API.
+    - Send streaming data to Kinesis and read the data in Databricks for real-time processing.
+
+### Running the Pipeline
+
+```bash
+# Connect to your EC2 instance
+ssh -i your-key-pair.pem ec2-user@your-ec2-instance-public-dns
+
+# Start ZooKeeper
+cd kafka_2.12-2.8.0
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+# Start Kafka broker
+bin/kafka-server-start.sh config/server.properties
+
+# Run the API
+python your_api_script.py
+
+# Post data to the API (from another terminal or script)
+python post_data_to_api.py
+```
 
 ## File Structure
-
-(A detailed file structure of the project will be added as the project progresses.)
+Pinterest-Data-Pipeline/
+├── api/
+│   ├── __init__.py
+│   ├── api.py
+│   ├── requirements.txt
+│   └── Dockerfile
+├── connectors/
+│   └── kafka-connect-s3/
+│       └── confluentinc-kafka-connect-s3-10.0.3.zip
+├── dags/
+│   ├── __init__.py
+│   ├── databricks_dag.py
+│   └── requirements.txt
+├── scripts/
+│   ├── fetch_data_from_db.py
+│   ├── post_data_to_api.py
+│   └── user_posting_emulation_streaming.py
+├── notebooks/
+│   ├── data_processing_notebook.ipynb
+│   └── streaming_data_processing_notebook.ipynb
+├── resources/
+│   └── CloudPinterestDataPipeline.png
+├── .gitignore
+├── README.md
+└── LICENSE
 
 
 ## License

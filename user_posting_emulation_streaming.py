@@ -1,10 +1,11 @@
+# Import the necessary modules and libraries
 import requests
 import random
 import json
 from datetime import datetime
 from time import sleep
 from user_posting_emulation import fetch_data_from_db
-
+# Class to encode the json data
 class DateTimeEncoder(json.JSONEncoder):
     """
     Custom JSON encoder to handle datetime objects.
@@ -13,7 +14,7 @@ class DateTimeEncoder(json.JSONEncoder):
         if isinstance(obj, datetime):
             return obj.isoformat()
         return super(DateTimeEncoder, self).default(obj)
-
+# Post to API function
 def post_data_to_api(pin_result, geo_result, user_result):
     """
     Posts data to the corresponding API endpoints.
@@ -24,18 +25,18 @@ def post_data_to_api(pin_result, geo_result, user_result):
     """
     invoke_url_pin = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-pin/record"
     headers = {'Content-Type': 'application/json'}
-
+    # Use try except to catch expected and unexpected errors
     try:
         payload = json.dumps({
             "StreamName": "streaming-0affe012670f-pin", 
             "Data": pin_result, 
                  "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
-        
+        # Print the payload for confirmation
         print(f"Payload for PIN Data dump: {payload}")
 
         response = requests.put(invoke_url_pin, headers=headers, data=payload)
         print(f"Print Reponse at put request stage PIN: ",response.json())
-
+        # Print the status code after posting to the API
         print(f"Posted to PIN stream with response: {response.status_code}")
 
         if response.status_code != 200:
@@ -47,18 +48,19 @@ def post_data_to_api(pin_result, geo_result, user_result):
 
     invoke_url_geo = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-geo/record"
     headers = {'Content-Type': 'application/json'}
-
+    # Use try except to catch expected and unexpected errors
     try:
         payload = json.dumps({
             "StreamName": "streaming-0affe012670f-geo", 
             "Data": geo_result, 
                  "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
-        
+        # Print the payload for confirmation
         print(f"Payload for GEO Data dump: {payload}")
 
         response = requests.put(invoke_url_geo, headers=headers, data=payload)
         print(f"Print Reponse at put request stage GEO: ",response.json())
-
+        
+        # Print the status code after posting to the API
         print(f"Posted to GEO stream with response: {response.status_code}")
 
         if response.status_code != 200:

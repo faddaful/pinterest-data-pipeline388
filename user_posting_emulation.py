@@ -1,3 +1,4 @@
+# Import the necessary modules and libraries
 import json
 import random
 from time import sleep
@@ -9,6 +10,7 @@ import boto3
 import pymysql
 from datetime import datetime
 
+# Script class
 class AWSDBConnector:
     """
     A class to handle the connection to an AWS RDS database using SQLAlchemy.
@@ -104,22 +106,24 @@ def post_data_to_api(pin_result, geo_result, user_result):
         "user": f"{base_url}/topics/0affe012670f.user"
     }
     headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
-
+    # Use a try except method to catch any expected and unexpected error
     try:
         for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
-
+            
             payload = {"records": [{"value": result}]}
+
             # Serialize the payload with custom DateTimeEncoder
             json_payload = json.dumps(payload, cls=DateTimeEncoder)
+
             #Print the payload for confirmation
             print("This is the payload dump: ", json_payload)
 
             response = requests.request("POST", invoke_urls[topic], headers=headers, data=json_payload)
 
-            print(response)
-
+            # Print response status code for validation purpose and debugging
             print(f"Posted to {topic} with response: {response.status_code}")
             if response.status_code != 200:
+                # Print error if not 200
                 print(f"Error posting to {topic}: {response.text}")
     except Exception as e:
         print(f"Exception occurred during posting to API: {e}")
