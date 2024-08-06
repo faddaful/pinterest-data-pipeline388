@@ -14,7 +14,7 @@ class DateTimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super(DateTimeEncoder, self).default(obj)
 
-def post_data_to_api(pin_results, geo_results, user_results):
+def post_data_to_api(pin_result, geo_result, user_result):
     """
     Posts data to the corresponding API endpoints.
     
@@ -22,41 +22,24 @@ def post_data_to_api(pin_results, geo_results, user_results):
     :param geo_results: List of data from geolocation_data table.
     :param user_results: List of data from user_data table.
     """
-    base_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/{stream_name}/records"
-    stream_names = {
-        "pin": "streaming-0affe012670f-pin",
-        "geo": "streaming-0affe012670f-geo",
-        "user": "streaming-0affe012670f-user"
-    }
+    invoke_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-pin/record"
     headers = {'Content-Type': 'application/json'}
 
     try:
-        for topic, results in zip(["pin", "geo", "user"], [pin_results, geo_results, user_results]):
-            records = []
-            for result in results:
-                # Convert the dictionary to a JSON string
-                records.append({
-                    "Data": result,
-                    #"PartitionKey": f"partition-1"
-                })
-            
-            payload = json.dumps({
-                "StreamName": stream_names[topic],
-                "Data": records, "PartitionKey": f"partition-1"
-            }, cls=DateTimeEncoder)
-            
-            # Replacing the placeholder with the actual stream name
-            invoke_url = base_url.replace("{stream_name}", stream_names[topic])
-            
-            # Print the payload for confirmation
-            print(f"This is the payload dump for {topic}: ", payload)
+        payload = json.dumps({
+            "StreamName": "streaming-0affe012670f-pin", 
+            "Data": pin_result, 
+                 "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
+        
+        print(f"Payload for Data dump: {payload}")
 
-            response = requests.put(invoke_url, headers=headers, data=payload)
-            print(response.json())
+        response = requests.put(invoke_url, headers=headers, data=payload)
+        print(f"Print Reponse at put request stage: ",response.json())
 
-            print(f"Posted to {topic} with response: {response.status_code}")
-            if response.status_code != 200:
-                print(f"Error posting to {topic}: {response.text}")
+        print(f"Posted to stream with response: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"Error posting to stream: {response.text}")
     except Exception as e:
         print(f"Exception occurred during posting to API: {e}")
 
