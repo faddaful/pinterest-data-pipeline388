@@ -265,7 +265,8 @@ Pinterest-Data-Pipeline/
 │   └── CloudPinterestDataPipeline.png
 ├── .gitignore
 ├── README.md
-└── LICENSE```
+└── LICENSE
+```
 
 ## License
 
