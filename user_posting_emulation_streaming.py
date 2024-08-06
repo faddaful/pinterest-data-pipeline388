@@ -22,7 +22,7 @@ def post_data_to_api(pin_result, geo_result, user_result):
     :param geo_results: List of data from geolocation_data table.
     :param user_results: List of data from user_data table.
     """
-    invoke_url = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-pin/record"
+    invoke_url_pin = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-pin/record"
     headers = {'Content-Type': 'application/json'}
 
     try:
@@ -31,25 +31,73 @@ def post_data_to_api(pin_result, geo_result, user_result):
             "Data": pin_result, 
                  "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
         
-        print(f"Payload for Data dump: {payload}")
+        print(f"Payload for PIN Data dump: {payload}")
 
-        response = requests.put(invoke_url, headers=headers, data=payload)
-        print(f"Print Reponse at put request stage: ",response.json())
+        response = requests.put(invoke_url_pin, headers=headers, data=payload)
+        print(f"Print Reponse at put request stage PIN: ",response.json())
 
-        print(f"Posted to stream with response: {response.status_code}")
+        print(f"Posted to PIN stream with response: {response.status_code}")
 
         if response.status_code != 200:
-            print(f"Error posting to stream: {response.text}")
+            print(f"Error posting to PIN stream: {response.text}")
     except Exception as e:
-        print(f"Exception occurred during posting to API: {e}")
+        print(f"Exception occurred during posting PIN to API: {e}")
+
+
+
+    invoke_url_geo = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-geo/record"
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        payload = json.dumps({
+            "StreamName": "streaming-0affe012670f-geo", 
+            "Data": geo_result, 
+                 "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
+        
+        print(f"Payload for GEO Data dump: {payload}")
+
+        response = requests.put(invoke_url_geo, headers=headers, data=payload)
+        print(f"Print Reponse at put request stage GEO: ",response.json())
+
+        print(f"Posted to GEO stream with response: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"Error posting to GEO stream: {response.text}")
+    except Exception as e:
+        print(f"Exception occurred during posting GEO to API: {e}")
+
+    
+    invoke_url_user = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-user/record"
+    headers = {'Content-Type': 'application/json'}
+
+    try:
+        payload = json.dumps({
+            "StreamName": "streaming-0affe012670f-user", 
+            "Data": user_result, 
+                 "PartitionKey": "partition-1"}, cls=DateTimeEncoder)
+        
+        print(f"Payload for USER Data dump: {payload}")
+
+        response = requests.put(invoke_url_user, headers=headers, data=payload)
+        print(f"Print Reponse at put request stage USER: ",response.json())
+
+        print(f"Posted to USER stream with response: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"Error posting to USER stream: {response.text}")
+    except Exception as e:
+        print(f"Exception occurred during posting USER to API: {e}")
 
 # Usage
 if __name__ == "__main__":
-    # Sleep for a random interval between 0 and 2 seconds
-    sleep(random.randrange(0, 2))
-    random_row = random.randint(0, 11000)
+    # Run a while loop to post data to the API consistently.
+    while True:
 
-    # Fetch data from database
-    pin_result, geo_result, user_result = fetch_data_from_db(random_row)
-    # Post data to API
-    post_data_to_api(pin_result, geo_result, user_result)
+        # Sleep for a random interval between 0 and 2 seconds
+        sleep(random.randrange(0, 2))
+        random_row = random.randint(0, 11000)
+
+        # Fetch data from database
+        pin_result, geo_result, user_result = fetch_data_from_db(random_row)
+        # Post data to API
+        post_data_to_api(pin_result, geo_result, user_result)
