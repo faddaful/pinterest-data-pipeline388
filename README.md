@@ -240,6 +240,7 @@ python post_data_to_api.py
 ```
 
 ## File Structure
+```plaintext
 Pinterest-Data-Pipeline/
 ├── api/
 │   ├── __init__.py
@@ -264,8 +265,7 @@ Pinterest-Data-Pipeline/
 │   └── CloudPinterestDataPipeline.png
 ├── .gitignore
 ├── README.md
-└── LICENSE
-
+└── LICENSE```
 
 ## License
 
