@@ -106,7 +106,7 @@ def post_data_to_api(pin_result, geo_result, user_result):
     headers = {'Content-Type': 'application/vnd.kafka.json.v2+json'}
 
     try:
-        for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result])
+        for topic, result in zip(["pin", "geo", "user"], [pin_result, geo_result, user_result]):
 
             payload = {"records": [{"value": result}]}
             # Serialize the payload with custom DateTimeEncoder
@@ -150,7 +150,13 @@ if __name__ == "__main__":
     or
     Run the infinite loop to post data continuously.
     """
-    
+    # Sleep for a random interval between 0 and 2 seconds
+    #sleep(random.randrange(0, 2))
+    #random_row = random.randint(0, 11000)
+
+    # Fetch data from database
+    #pin_result, geo_result, user_result = fetch_data_from_db(random_row)
+    # Post data to API
     # post_data_to_api(pin_result, geo_result, user_result)
 
     # run the infinite loop
