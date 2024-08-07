@@ -52,7 +52,7 @@ To begin, you will need an AWS account. If you don't have one, you can sign up f
    - Use SSH to connect to your EC2 instance.
    - Ensure you have the necessary permissions set up for your security groups.
     - create a .pem key file locally in your project folder
-    - Connect to your EC2 instance using ssh
+    - Connect to your EC2 instance using ssh. Use root@ec2 if you have root access otherwise use ec2-user@ec2
 
 ### Setup Kafka on EC2 Instance
 In order to setup Kafka on your ec2 client, you will need MSK cluster and Kafka installed.
@@ -71,7 +71,16 @@ Kafka required java to run so you will need to install Java first.
    cd kafka_2.12-2.8.0/libs
    ```
 3. **Install AWS MSK**:
-With Amazon MSK, you don't need to worry about managing your kafka operational overhead. MSK automatically provisions and runs your Apache Kafka clusters, as well as monitors the cluster's health.
+IAM MSK authentication package: With Amazon MSK, you don't need to worry about managing your kafka operational overhead. MSK automatically provisions and runs your Apache Kafka clusters, as well as monitors the cluster's health.
+Before you are ready to configure your EC2 client to use AWS IAM for cluster authentication, you will need to:
+
+Navigate to the IAM console on your AWS account
+Here, on the left hand side select the Roles section
+You should see a list of roles, select the one with the following format: <your_UserId>-ec2-access-role
+Copy this role ARN and make a note of it, as we will be using it later for the cluster authentication
+Go to the Trust relationships tab and select Edit trust policy
+Click on the Add a principal button and select IAM roles as the Principal type
+Replace ARN with the <your_UserId>-ec2-access-role ARN you have just copied
     
     ```bash
     wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.5/aws-msk-iam-auth-1.1.5-all.jar
@@ -80,8 +89,11 @@ With Amazon MSK, you don't need to worry about managing your kafka operational o
     Add the .jar file 
     ```
 
+Modify the client.properties file, inside your kafka_folder/bin directory accordingly.
 
 4. **Start Kafka Server**:
+Before you start Kafka and create topics, you will need to get the <Bootstrap servers string> and <Plaintext Apache Zookeeper connection string>.
+Set the CLASSPATH environment variable.
    - Start the ZooKeeper service:
      ```bash
      bin/zookeeper-server-start.sh config/zookeeper.properties
@@ -92,7 +104,7 @@ With Amazon MSK, you don't need to worry about managing your kafka operational o
      ```
 
 ### Create Kafka Topics
-
+When creating topics, replace the <BootstrapServerString> with the obtained in step 4 above.
 To create Kafka topics, you can use the following command:
 ```bash
 bin/kafka-topics.sh --create --topic <topic_name> --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
@@ -100,9 +112,9 @@ bin/kafka-topics.sh --create --topic <topic_name> --bootstrap-server localhost:9
 Replace `<topic_name>` with the name of your topic.
 
 ### Connect the MSK cluster to a S3 bucket
-You will need to use msk connect to connect the msk cluster to a s3 bucket such that any data going through the cluster will be automaticaaly saved and stored in a dedicated s3 bucket.
+You will need to use <msk connect> to connect the msk cluster to a <s3 bucket> such that any data going through the cluster will be automaticaaly saved and stored in a dedicated s3 bucket.
 - First download the kafka connector .jar or zip file into your ec2 client from https://www.confluent.io/hub/confluentinc/kafka-connect-s3
-- Upload the connector to your s3 bucket. use the command aws s3 cp kafka-connect-s3 s3://<bucket-name>/kafka-connect-s3/
+- Upload the connector to your s3 bucket. use the command <aws s3 cp kafka-connect-s3 s3://<bucket-name>/kafka-connect-s3/>
  - Create a custom plugin with msk connect in the msk connector console. Select the s3 connector zip file as the plugin object.
 
     assume admin user privileges
@@ -118,7 +130,7 @@ You will need to use msk connect to connect the msk cluster to a s3 bucket such 
         '''
     <aws s3 cp ./confluentinc-kafka-connect-s3-10.0.3.zip s3://<BUCKET_NAME>/kafka-connect-s3/>
         '''
- - In your msk console, create a connetor and configure the connector properties as appropriate, select your access role and that's it.
+ - In your msk console, create a connetor and configure the connector properties as appropriate, select your access role and that's it. Make sure the topics.regex field in the connector configuration is etup properly with .* at the end.
  - Now, you're ready to start sending data to s3
 
 ## We will need to build our own API 
@@ -134,7 +146,7 @@ To replicate the pinterest data pipeline, we need to build our own API. This API
             sudo wget https://packages.confluent.io/archive/7.2/confluent-7.2.0.tar.gz
             tar -xvzf confluent-7.2.0.tar.gz 
         '''
-        cd into confluent-7.2.0/etc/kafka-rest and open kafka-properties to configure it.
+        cd into confluent-7.2.0/etc/kafka-rest and open kafka-rest.properties to configure it.
         modify the bootstrap.servers and the zookeeper.connect variables in the file with your already generated values
         Add the aws-msk-iam configuration from this link to the file for authentication https://github.com/aws/aws-msk-iam-auth
     - Start and deploy the api if you've not done so before.
@@ -144,7 +156,7 @@ To replicate the pinterest data pipeline, we need to build our own API. This API
     If everything is setup correctly, you should see a info server running and listening for request.
 3. **Send data to the API**:
 Now, we are ready to send data to the API which will then send the data to the MSK Cluster using the plugin-connector pair previously created.
-- Modify the python script  and add a post_data_to_api function. 
+- Modify the python script  and add a post_data_to_api function. Use the invoke url to send post request to the api.
 - Check the data is been consumed in your s3 bucket. You should see a topics folder with your topics name and the corresponding data respectively.
 
 ## Batch Data processing in Databricks
@@ -153,9 +165,9 @@ In order for us to clean and query the batch data, we need to read the data from
 - Mout your s3 bucket to the databricks account
 - Read in the data from the Delta table, located at '''< dbfs:/user/hive/warehouse/authentication_credentials >'''
 - Read in the json files from the s3 bucket and convert to dataframe. Create 3 dataframes for the 3 topics in the s3 bucket.
-If all works well. start clening the data.
+If all works well. start clening the data. When reading in the JSONs from S3, make sure to include the complete path to the JSON objects, as seen in your S3 bucket.
 All done at this stage.
-- Clean the data, perform some computations using pyspark or spark SQL. I prefer pyspark.
+- Clean the data, perform some computations using pyspark or spark SQL. Preferably pyspark.
 
 ## Looking Ahead...Orchestrate Databricks Workflow on AWS MWAA (Managed Workflow for Apache Airflow)
 ## Batch Processing Using AWS MWAA
@@ -177,11 +189,12 @@ To use Job API with aws mwaa to monitor DAG with Databricks based tasks. Create 
 - Navigate to ```aws-mwaa-local-runner/requirements/``` locally and create requirements.txt file.
 - Add this line to requirements.txt file ```apache-airflow[databricks]``` to install databricks connection type.
 - Test that everything is running with ```./mwaa-local-env test-requirements```
-- Upload the requirements.txt file to the S3 bucket
+- Upload the requirements.txt file to the MWAA S3 bucket.
 4. **Specify the file path in Requirements file field**:
 - On AWS MWAA console environment, click edit, under the DAG code in Amazon S3, update your Requirements file field by selecting the path corresponding to the requirements.txt file you have just uploaded to the S3 bucket
+- To get to the Airflow UI, go to Amazon MWAA >> Environments >> Databricks-Airflow-env.
 - In the Airflow UI, go back to connections and select databricks_default. The connection type should have Databricks option.
-- Create DAG and upload to the DAGS folder. It should appear in the Airflow UI.
+- Create DAG and upload to the DAGS folder in MWAA S3 bucket. It should appear in the Airflow UI. Manually trigger the DAG.
 
 ## Stream Processing with AWS Kinesis
 Now, send streaming data to Kinesis and read this data in Databricks
@@ -189,13 +202,17 @@ Now, send streaming data to Kinesis and read this data in Databricks
 Navigate to the Kinesis console, and select the Data Streams section. Choose the Create stream button
 - Configure API with Kinesis proxy integration
 Create an IAM role in the IAM console that assumes the AmazonKinesisFullAccessRole policy.
-List stream source, Create, describe and delete streams in Kinesis, Set up the POST, DELETE methods, Add records to streams in Kinesis, Set up the records PUT method, deploy and invoke your API.
+Configure your previously created REST API to allow it to invoke Kinesis actions.
+Your API should be able to invoke the following actions:
+    List streams in Kinesis
+    Create, describe and delete streams in Kinesis
+    Add records to streams in Kinesis
 - Send Data to the kinesis Streams
-Create a new script, user_posting_emulation_streaming.py, that builds upon the initial user_posting_emulation.py. Send requests to the API from this script which will add one record at a time to the stream.
+Create a new script, <user_posting_emulation_streaming.py>, that builds upon the initial <user_posting_emulation.py>. Send requests to the API from this script which will add one record at a time to the stream.
 - Read the data from kinesis streams in databricks
 Create a new notebook that read-in the data in databricks. You will need your access key and secret key here.
 - Transform and clean the data as appropriate.
-- Write the streaming data to delta tables.
+- Write the streaming data to delta tables. That's it.
 
 ## Usage Instructions
 
