@@ -1,1 +1,3 @@
 *.yaml
+msk-connector-config.json
+.pem
