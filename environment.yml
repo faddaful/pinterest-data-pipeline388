@@ -3,3 +3,5 @@ channels:
   - defaults
 dependencies:
   - boto3
+  - psycopg2
+  - 

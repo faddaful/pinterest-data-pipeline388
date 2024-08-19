@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from time import sleep
 from user_posting_emulation import fetch_data_from_db
+
 # Class to encode the json data
 class DateTimeEncoder(json.JSONEncoder):
     """
@@ -23,8 +24,10 @@ def post_data_to_api(pin_result, geo_result, user_result):
     :param geo_results: List of data from geolocation_data table.
     :param user_results: List of data from user_data table.
     """
+    # This invoke url post data to the api just once
     invoke_url_pin = "https://sjpa7o86pd.execute-api.us-east-1.amazonaws.com/prods/streams/streaming-0affe012670f-pin/record"
     headers = {'Content-Type': 'application/json'}
+    
     # Use try except to catch expected and unexpected errors
     try:
         payload = json.dumps({

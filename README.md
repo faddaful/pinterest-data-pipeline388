@@ -75,12 +75,13 @@ IAM MSK authentication package: With Amazon MSK, you don't need to worry about m
 Before you are ready to configure your EC2 client to use AWS IAM for cluster authentication, you will need to:
 
 Navigate to the IAM console on your AWS account
-Here, on the left hand side select the Roles section
-You should see a list of roles, select the one with the following format: <your_UserId>-ec2-access-role
+On the left hand side select the Roles section
+Create a role with the following format: <your_UserId>-ec2-access-role. Or choose any format of your choice
 Copy this role ARN and make a note of it, as we will be using it later for the cluster authentication
 Go to the Trust relationships tab and select Edit trust policy
 Click on the Add a principal button and select IAM roles as the Principal type
 Replace ARN with the <your_UserId>-ec2-access-role ARN you have just copied
+cd to your libs folder in the kafka folder. Download the aws msk.
     
     ```bash
     wget https://github.com/aws/aws-msk-iam-auth/releases/download/v1.1.5/aws-msk-iam-auth-1.1.5-all.jar

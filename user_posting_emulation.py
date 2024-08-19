@@ -13,7 +13,7 @@ from datetime import datetime
 # Script class
 class AWSDBConnector:
     """
-    A class to handle the connection to an AWS RDS database using SQLAlchemy.
+    A class to handle the connection to the AWS RDS database using SQLAlchemy.
     """
     def __init__(self, db_creds):
         """
@@ -142,8 +142,16 @@ def run_infinite_post_data_loop():
         # Fetch data from database
         pin_result, geo_result, user_result = fetch_data_from_db(random_row)
 
-        # Post data to API
-        post_data_to_api(pin_result, geo_result, user_result)
+        # If the posting is successful, break the loop
+        try:
+            # Attempt to post data to API
+            post_data_to_api(pin_result, geo_result, user_result)
+            print("Data posted successfully!")
+            break  # Break the loop if no exception is raised
+
+        except Exception as e:
+            # Handle the exception if posting fails
+            print(f"Failed to post data: {e}. Retrying...")
     
 
 if __name__ == "__main__":
