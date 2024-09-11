@@ -1,3 +1,5 @@
 *.yaml
 msk-connector-config.json
 .pem
+        key-05c499de89464ce74.pem.txt
+        
