@@ -21,7 +21,7 @@
 
 ## Introduction
 
-Welcome to the Pinterest Data Pipeline project! This project is designed to extract, process, and analyze Pinterest data efficiently. The main aim of this project is to build a scalable and reliable data pipeline using modern data engineering tools and techniques.
+This project is designed to extract, process, and analyze Pinterest data efficiently. The main aim of this project is to build a scalable and reliable data pipeline using modern data engineering tools and techniques.
 
 Through this project, you will learned how to:
 - Set up and configure AWS services
